@@ -1,0 +1,59 @@
+image: python:3.9
+
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+
+# Cache pip dependencies between jobs
+cache:
+  paths:
+    - .pip-cache/
+    - venv/
+
+before_script:
+  - python -V
+  - python -m venv venv
+  - source venv/Scripts/activate
+  - pip install -r requirements.txt
+
+test:
+  stage: test
+  script:
+    - python -m pytest
+  only:
+    - main
+    - merge_requests
+
+build:
+  stage: build
+  script:
+    - echo "Building the application..."
+    # Add your build commands here
+  artifacts:
+    paths:
+      - dist/
+  only:
+    - main
+
+deploy_staging:
+  stage: deploy
+  script:
+    - echo "Deploying to staging environment"
+  environment:
+    name: staging
+  only:
+    - main
+
+deploy_production:
+  stage: deploy
+  script:
+    - echo "Deploying to production environment"
+  environment:
+    name: production
+  when: manual
+  only:
+    - main
